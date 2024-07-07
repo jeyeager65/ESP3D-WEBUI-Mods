@@ -208,12 +208,13 @@ section .active, .mobile-view section .active {
     border-color: #ffffff !important;
 }
 
-.form-select, .form-input {
+.form-select, .form-input, #selectAxisList {
     color: #ffffff;
     background-color: var(--buttonbkgd) !important;
+    border-color: #ffffff !important;
 }
 
-.form-select:focus, .form-input:focus {
+.form-select:focus, .form-input:focus, #selectAxisList:focus {
     border-color: var(--highlight) !important;
 }
 
@@ -635,8 +636,15 @@ background-color: var(--panelbkgd);
 #tablettab .mposition {
 color: white;
 }
-#tablettab #toolpath {
+
+#tablettab #gcode, 
+#tablettab .mdi-entry, 
+#tablettab #messages {
 border: 0.05rem solid white;
+}
+
+#tablettab #toolpath, #tablettab #gcode-states {
+    border: 0.05rem solid black;
 }
 
 /* (A) WRAPPER */
