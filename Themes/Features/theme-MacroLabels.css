@@ -1,0 +1,5 @@
+/* Always show macro button label */
+div.macro-buttons-panel .hide-low,
+.mobile-view div.macro-buttons-panel .hide-low {
+    display: inline-block !important;    
+}
