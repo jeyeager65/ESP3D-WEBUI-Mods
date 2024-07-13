@@ -491,6 +491,14 @@ input[type='radio']:checked + label {
     padding-top: 0.1rem;
 }
 
+.btn-xs, .btn.btn-screen  {
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-left: 20px;
+    margin-right: 20px;
+    width: auto;
+}
+
 .btn-header:hover,
 .btn-close:hover,
 .btn-header:focus,
