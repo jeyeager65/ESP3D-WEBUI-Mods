@@ -580,6 +580,16 @@ div#infopage {
     width: 98%;
 }
 
+.drop-zone--over {
+    background:  
+        linear-gradient(90deg, var(--highlight) 50%,transparent 50%),
+        linear-gradient(90deg, var(--highlight) 50%,transparent 50%),
+        linear-gradient(0deg, var(--highlight) 50%,transparent 50%),
+        linear-gradient(0deg, var(--highlight) 50%,transparent 50%);
+    background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+    background-size: 15px 4px, 15px 4px, 4px 15px, 4px 15px;
+}
+
 /* Tablet Extension */
 
 #tablettab {
