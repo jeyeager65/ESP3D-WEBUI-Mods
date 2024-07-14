@@ -1,0 +1,338 @@
+<style type="text/css">
+
+    .joyjog {
+        text-align: center;
+        margin: 10px;
+    }
+
+    #joyJogDiv {
+        width: 300px;
+        height: 300px;
+        margin: auto;
+    }
+
+    #joyJogButtons {
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+</style>
+
+<div class="joyjog">
+    <div id="joyJogDiv">
+        <canvas id="joyJogCanvas"></canvas>
+    </div>
+    <div id="joyJogButtons">
+        <button class="btn m-1" onclick="cancelJog()">Cancel Jog</button>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var extensionName = "joyjog";
+    var maxFeedrate = 3000;
+    var maxTravel = 10;
+    var xAccel = 200;
+    var yAccel = 200;
+    var plannerBlocks = 32;
+
+    function sendMessage(msg) {
+        window.parent.postMessage(msg, '*');
+    }
+
+    function sendCommand(command) {
+        sendMessage({ type: "cmd", target: "webui", id: extensionName, content: command });
+    }
+
+    function cancelJog() {
+        sendCommand(String.fromCharCode(0x85));
+    }
+
+    function jog(x,y,feedrate) {
+        sendCommand('$J=G91 G21 X' + x + ' Y' + y + ' F' + feedrate);
+    }
+
+    function parseSetting(content) {
+        var parts = content.split('=');
+        if(parts.length == 2) {
+            switch (parts[0]) {
+                case '$/axes/x/acceleration_mm_per_sec2':
+                    xAccel = parseFloat(parts[1]);
+                    console.log("X Acceleration: " + xAccel);
+                    break;
+                case '$/axes/y/acceleration_mm_per_sec2':
+                    yAccel = parseFloat(parts[1]);
+                    console.log("Y Acceleration: " + yAccel);
+                    break;
+                case '$/planner_blocks':
+                    plannerBlocks = parseFloat(parts[1]);
+                    console.log("Planner Blocks: " + plannerBlocks);
+                    break;
+            }
+        }
+    }
+
+    function processMessage(eventMsg) {
+        // Process messages with a type that for this extension or non-specific
+        if (eventMsg.data && (!eventMsg.data.id || eventMsg.data.id === extensionName || eventMsg.data.id === extensionName + "Setting")) {
+            if(eventMsg.data.content) {
+                var content = eventMsg.data.content;
+                if(eventMsg.data.type === "stream" && content.startsWith("$/")) {
+                    parseSetting(content);
+                } else if(eventMsg.data.type === "download" && content.status === "success" && content.initiator.url === "preferences.json") {
+                    var reader = new FileReader();
+                    reader.onload = () => {
+                        maxFeedrate = parseFloat(JSON.parse(reader.result).settings.xyfeedrate);
+                        console.log("Max XY Feedrate: " + maxFeedrate);
+                    };
+                    reader.readAsText(content.response);
+                }
+            }
+        }
+    }
+
+    var canvas = document.getElementById("joyJogCanvas");
+    var parentDiv = document.getElementById("joyJogDiv");
+
+    var primaryColor, lineColor, backgroundColor;
+
+    canvas.width = parentDiv.clientWidth;
+    canvas.height = parentDiv.clientHeight;
+
+    var knobRadius = 40;
+    var maxDistance = (canvas.width/2)-knobRadius;
+
+    var mouseClickDown = false;
+
+    var jogChangeTimeout;
+    var currJoyX = 0;
+    var currJoyY = 0;
+    var currJoyDistance = 0;
+
+    var centerX = canvas.width/2;
+    var centerY = canvas.height/2;
+
+    var context = canvas.getContext("2d");
+
+    // Work in standard coordinate system with 0,0 at the center
+    context.translate(centerX, centerY);
+    context.scale(1,-1);
+
+    function drawJoystick(currX, currY) {
+        // Clear
+        context.clearRect(-1*canvas.width/2, -1*canvas.height/2, canvas.width, canvas.height);
+
+        // Draw Joystick Background
+        context.beginPath();
+        context.arc(0, 0, maxDistance, 0, 2 * Math.PI);
+        context.fillStyle = backgroundColor;
+        context.fill();
+        context.lineWidth = 2;
+        context.strokeStyle = lineColor;
+        context.stroke();
+
+        // Draw Main Joystick Knob
+        context.beginPath();
+        context.arc(currX, currY, knobRadius, 0, 2*Math.PI, false);
+        context.fillStyle = primaryColor;
+        context.fill();
+        context.lineWidth = 2;
+        context.strokeStyle = lineColor;
+        context.stroke();
+
+        // Draw Joystick Knob Inner Circle
+        context.beginPath();
+        context.arc(currX, currY, 10, 0, 2 * Math.PI);
+        context.fillStyle = lineColor;
+        context.fill();
+        context.lineWidth = 2;
+        context.strokeStyle = lineColor;
+        context.stroke();
+    }
+
+    function performJog() {
+        if(mouseClickDown) {
+            var feedrate = ((currJoyDistance/maxDistance) * maxFeedrate).toFixed();
+            var jogX = (currJoyX*(maxTravel/100)).toFixed(3);
+            var jogY = (currJoyY*(maxTravel/100)).toFixed(3);
+            var jogDist = Math.sqrt(Math.pow(jogX, 2) + Math.pow(jogY, 2)).toFixed(3);
+            jog(jogX, jogY, feedrate);
+            jogChangeTimeout = setTimeout(performJog, calcJogTimeMs(feedrate, jogDist));
+        }
+    }
+
+    function onStart(event) {
+        mouseClickDown = true;
+        
+        var pageX = event.pageX;
+        var pageY = event.pageY;
+
+        // Handle touch event
+        if(event.targetTouches) {
+            pageX = event.targetTouches[0].pageX;
+            pageY = event.targetTouches[0].pageY;
+        }
+
+        jogChangeTimeout = setTimeout(performJog, 100);
+    }
+
+    function onMove(event) {
+        if(!mouseClickDown) { return; }
+
+        var pageX = event.pageX;
+        var pageY = event.pageY;
+
+        // Handle touch event
+        if(event.targetTouches) {
+            pageX = event.targetTouches[0].pageX;
+            pageY = event.targetTouches[0].pageY;
+        }
+
+        var tempX = pageX-canvas.offsetLeft-(canvas.width/2);
+        var tempY = canvas.height-pageY+canvas.offsetTop-(canvas.height/2);
+        var tempDist = Math.sqrt(Math.pow(tempX, 2) + Math.pow(tempY, 2)).toFixed();
+
+        if(tempDist <= maxDistance) {
+            currJoyX = tempX;
+            currJoyY = tempY;
+            currJoyDistance = tempDist;
+        } else {
+            // Outside max - limit to bounds
+            console.log(maxDistance/tempDist);
+            currJoyX = tempX * (maxDistance/tempDist);
+            currJoyY = tempY * (maxDistance/tempDist);
+            currJoyDistance = maxDistance;
+        }
+
+        drawJoystick(currJoyX, currJoyY);
+    }
+
+    function onEnd(event) {
+        mouseClickDown = false;
+        currJoyX = 0;
+        currJoyY = 0;
+        currJoyDistance = 0;
+        drawJoystick(0, 0);
+        clearTimeout(jogChangeTimeout);
+    }
+
+    function onTouchStart(event) {
+        event.preventDefault();
+        onStart(event);
+    }
+
+    function onTouchMove(event) {
+        event.preventDefault();
+        onMove(event);
+    }
+
+    function onTouchEnd(event) {
+        event.preventDefault();
+        onEnd(event);
+    }
+
+    // https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#safely_detecting_option_support
+    let passiveSupported = false;
+    try {
+        const options = { get passive() { passiveSupported = true; return false; }, };
+        window.addEventListener("test", null, options);
+        window.removeEventListener("test", null, options);
+    } catch (err) {
+        passiveSupported = false;
+    }
+
+    // Add Touch and Mouse Event Listeners
+    canvas.addEventListener("touchstart", onTouchStart, passiveSupported ? { passive: false } : false);
+    document.addEventListener("touchmove", onTouchMove, passiveSupported ? { passive: false } : false);
+    document.addEventListener("touchend", onTouchEnd, passiveSupported ? { passive: false } : false);
+
+    canvas.addEventListener("mousedown", onStart, passiveSupported ? { passive: false } : false);
+    document.addEventListener("mousemove", onMove, passiveSupported ? { passive: false } : false);
+    document.addEventListener("mouseup", onEnd, passiveSupported ? { passive: false } : false);
+
+    function setColors() {
+        // Style Canvas with CSS - https://stackoverflow.com/a/67124914
+        var panel = document.createElement("div");
+        panel.classList.add("panel");
+        var navbar = document.createElement("div");
+        navbar.classList.add("navbar");
+        panel.appendChild(navbar);
+        var button = document.createElement("button");
+        button.classList.add("btn");
+        panel.appendChild(button);
+        document.body.appendChild(panel);
+
+        var panelStyle = window.getComputedStyle(panel);
+        var navbarStyle = window.getComputedStyle(navbar);
+        var buttonStyle = window.getComputedStyle(button);
+        primaryColor = navbarStyle.backgroundColor;
+        lineColor = buttonStyle.borderColor;
+        backgroundColor = buttonStyle.backgroundColor;
+
+        panel.remove();
+
+        drawJoystick(0, 0);
+    }
+
+    function init() {
+        // Load calculation settings
+        sendCommand("$/axes/x/acceleration_mm_per_sec2");
+        sendCommand("$/axes/y/acceleration_mm_per_sec2");
+        sendCommand("$/planner_blocks");
+        
+        // Download preferences.json to get XY Feedrate
+        sendMessage({type: 'download', target: 'webui', id: extensionName, url: 'preferences.json'});
+
+        // Set canvas colors based on theme styles
+        setTimeout(setColors, 100);
+    }
+
+    window.onload = (event) => {
+        // Required for message processing
+        window.addEventListener("message", processMessage, false);
+
+        init();
+    };
+
+    // https://github.com/gnea/grbl/wiki/Grbl-v1.1-Jogging#joystick-implementation
+    function calcJogTimeMs(feedrate_mm_min, distance) {
+
+        // Max acceleration along the jog vector - /axes/x(y)/acceleration_mm_per_sec2
+        var a = Math.min(xAccel, yAccel); 
+
+        // Incremental distance of jog command
+        // s = v * dt
+        var s = distance;
+
+        // Current jog feed rate in mm/sec, not mm/min.  Less than or equal to max jog rate.
+        var v = feedrate_mm_min / 60;
+
+        // Estimated execution time of a single jog command in seconds
+        var dt = s / v;
+
+        // Number of Grbl planner blocks - /planner_blocks
+        var N = plannerBlocks;
+
+        // Computes total estimated latency in seconds.
+        var T = dt * N;
+
+        // Convert seconds to milliseconds
+        var ms = dt * 1000;
+
+        // Validate dt
+        // dt > 10ms
+        // dt > v^2 / (2 * a * (N-1))
+        console.log("F" + feedrate_mm_min + " R" + distance + " dt(ms)=" + (dt*1000).toFixed(3));
+        
+        var test = Math.pow(v, 2) / (2 * a * (N-1));
+        console.log("Calculated Min MS: " + test);
+        if(ms < test) {
+            ms = test;
+        }
+
+        if(ms < 10) {
+            ms = 10;
+            console.log("Min MS: " + ms);
+        }
+
+        return dt * 1000;
+    }
+</script>
