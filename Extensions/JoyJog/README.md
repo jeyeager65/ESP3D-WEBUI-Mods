@@ -2,7 +2,8 @@
 
 This is a panel extension that provides a virtual joystick for jogging.
 
-![image](https://github.com/user-attachments/assets/f9553aa5-6fd4-4ff2-b1ea-fc69db598527)
+![image](https://github.com/user-attachments/assets/1a377592-966b-475c-ac4b-908a4668ad20)
+![image](https://github.com/user-attachments/assets/f71a51b2-56e9-46bc-bcb5-d16a806d8d9a)
 
 ## Usage
 > [!WARNING]
@@ -11,6 +12,10 @@ This is a panel extension that provides a virtual joystick for jogging.
 - Joystick
   - Mouse - Click and drag the center circle.  The machine will move at the specified direction at a feedrate proportional to the distance from the center.  Releasing the mouse click will cancel the current jog.
   - Touch - Similar to mouse.  Touch and drag the center circle.  Lifting the finger will cancel the current jog.
+- Jog XY Button
+  - Click to display XY jog.  This is the default.
+- Jog Z Button
+  - Click to display Z jog.
 - Cancel Jog Button
   - If the jog is not cancelling as expected, this can be clicked to cancel the current jog.  Typically this is not needed but in some circumstances it can be helpful.
 
