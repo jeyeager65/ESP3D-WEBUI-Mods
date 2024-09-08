@@ -15,6 +15,11 @@
         margin-top: 10px;
         margin-bottom: 10px;
     }
+
+    #joyJogButtons, #joyJogButtons button.btn {
+        cursor: pointer !important;
+    }
+
 </style>
 
 <div class="joyjog">
@@ -22,23 +27,33 @@
         <canvas id="joyJogCanvas"></canvas>
     </div>
     <div id="joyJogButtons">
-        <button class="btn m-1" onclick="cancelJog()">Cancel Jog</button>
+        <button class="btn m-1" onclick="cancelJog(); jogMode = 'XY'; drawXYJoystick(0,0);">Jog XY</button>  
+        <button class="btn m-1" onclick="cancelJog(); jogMode = 'Z'; drawZJoystick(0);">Jog Z</button>  
+        <button class="btn m-1" onclick="cancelJog()">Cancel Jog</button>  
     </div>
 </div>
 
 <script type="text/javascript">
     var extensionName = "joyjog";
-    var maxFeedrate = 3000;
+    var maxXYFeedrate = 3000;
+    var maxZFeedrate = 1000;
     var maxTravel = 10;
     var xAccel = 200;
     var yAccel = 200;
+    var zAccel = 80;
     var plannerBlocks = 32;
+    var jogMode = "XY";
+
+    function debug(msg) {
+        console.log("JoyJog: " + msg);
+    }
 
     function sendMessage(msg) {
         window.parent.postMessage(msg, '*');
     }
 
     function sendCommand(command) {
+        debug("Send Command: " + command);
         sendMessage({ type: "cmd", target: "webui", id: extensionName, content: command });
     }
 
@@ -46,8 +61,14 @@
         sendCommand(String.fromCharCode(0x85));
     }
 
-    function jog(x,y,feedrate) {
+    function jogXY(x,y,feedrate) {
+        debug('$J=G91 G21 X' + x + ' Y' + y + ' F' + feedrate);
         sendCommand('$J=G91 G21 X' + x + ' Y' + y + ' F' + feedrate);
+    }
+
+    function jogZ(z,feedrate) {
+        debug('$J=G91 G21 Z' + z + ' F' + feedrate);
+        sendCommand('$J=G91 G21 Z' + z + ' F' + feedrate);
     }
 
     function parseSetting(content) {
@@ -56,15 +77,19 @@
             switch (parts[0]) {
                 case '$/axes/x/acceleration_mm_per_sec2':
                     xAccel = parseFloat(parts[1]);
-                    console.log("X Acceleration: " + xAccel);
+                    debug("X Acceleration: " + xAccel);
                     break;
                 case '$/axes/y/acceleration_mm_per_sec2':
                     yAccel = parseFloat(parts[1]);
-                    console.log("Y Acceleration: " + yAccel);
+                    debug("Y Acceleration: " + yAccel);
+                    break;
+                case '$/axes/z/acceleration_mm_per_sec2':
+                    zAccel = parseFloat(parts[1]);
+                    debug("Z Acceleration: " + zAccel);
                     break;
                 case '$/planner_blocks':
                     plannerBlocks = parseFloat(parts[1]);
-                    console.log("Planner Blocks: " + plannerBlocks);
+                    debug("Planner Blocks: " + plannerBlocks);
                     break;
             }
         }
@@ -75,13 +100,15 @@
         if (eventMsg.data && (!eventMsg.data.id || eventMsg.data.id === extensionName || eventMsg.data.id === extensionName + "Setting")) {
             if(eventMsg.data.content) {
                 var content = eventMsg.data.content;
-                if(eventMsg.data.type === "stream" && content.startsWith("$/")) {
-                    parseSetting(content);
+                if((eventMsg.data.type === "stream" || eventMsg.data.type === "cmd") && content.status === "success" && content.response && content.response.startsWith("$/")) {
+                    parseSetting(content.response);
                 } else if(eventMsg.data.type === "download" && content.status === "success" && content.initiator.url === "preferences.json") {
                     var reader = new FileReader();
                     reader.onload = () => {
-                        maxFeedrate = parseFloat(JSON.parse(reader.result).settings.xyfeedrate);
-                        console.log("Max XY Feedrate: " + maxFeedrate);
+                        maxXYFeedrate = parseFloat(JSON.parse(reader.result).settings.xyfeedrate);
+                        maxZFeedrate = parseFloat(JSON.parse(reader.result).settings.zfeedrate);
+                        debug("Max XY Feedrate: " + maxXYFeedrate);
+                        debug("Max Z Feedrate: " + maxZFeedrate);
                     };
                     reader.readAsText(content.response);
                 }
@@ -117,6 +144,14 @@
     context.scale(1,-1);
 
     function drawJoystick(currX, currY) {
+        if(jogMode === "XY") {
+            drawXYJoystick(currX, currY);
+        } else {
+            drawZJoystick(currY);
+        }
+    }
+
+    function drawXYJoystick(currX, currY) {
         // Clear
         context.clearRect(-1*canvas.width/2, -1*canvas.height/2, canvas.width, canvas.height);
 
@@ -128,6 +163,100 @@
         context.lineWidth = 2;
         context.strokeStyle = lineColor;
         context.stroke();
+
+        context.setLineDash([7, 7]);
+
+        // Draw X Axis
+        context.beginPath();
+        context.moveTo(-1*canvas.width/2, 0);
+        context.lineTo(canvas.width,0);
+        context.lineWidth = 1;
+        context.strokeStyle = lineColor;
+        context.stroke();
+
+        // Draw Y Axis
+        context.beginPath();
+        context.moveTo(0, -1*canvas.height/2);
+        context.lineTo(0, canvas.height/2);
+        context.lineWidth = 1;
+        context.strokeStyle = lineColor;
+        context.stroke();
+
+        context.setLineDash([]);
+
+        // Draw Axis Labels
+        context.save();
+        context.scale(1,-1);
+        context.font = "1em Arial";
+        context.fillStyle = lineColor;
+        context.fillText("Y+",5,-1*canvas.height/2+35);
+        context.fillText("Y-",5,canvas.height/2-22);
+        context.fillText("X-",-1*canvas.width/2+10,-5);
+        context.fillText("X+",canvas.width/2-30,-5);
+        context.restore();
+
+        // Draw Main Joystick Knob
+        context.beginPath();
+        context.arc(currX, currY, knobRadius, 0, 2*Math.PI, false);
+        context.fillStyle = primaryColor;
+        context.fill();
+        context.lineWidth = 2;
+        context.strokeStyle = lineColor;
+        context.stroke();
+
+        // Draw Joystick Knob Inner Circle
+        context.beginPath();
+        context.arc(currX, currY, 10, 0, 2 * Math.PI);
+        context.fillStyle = lineColor;
+        context.fill();
+        context.lineWidth = 2;
+        context.strokeStyle = lineColor;
+        context.stroke();
+
+    }
+
+    function drawZJoystick(currY) {
+        currX = 0;
+
+        // Clear
+        context.clearRect(-1*canvas.width/2, -1*canvas.height/2, canvas.width, canvas.height);
+
+        // Draw Z Background
+        context.beginPath();
+        context.lineWidth = 3;
+        context.strokeStyle = lineColor;
+        context.arc(0, 85, knobRadius-15, 0, Math.PI);
+        context.arc(0, -85, knobRadius-15, Math.PI, 2*Math.PI);
+        context.lineTo(knobRadius-15, 85);
+        context.stroke();
+        context.fillStyle = backgroundColor;
+        context.fill();
+
+        // Draw Z Axis
+        context.beginPath();
+        context.setLineDash([7, 7]);
+        context.moveTo(0, -1*canvas.height/2);
+        context.lineTo(0, canvas.height/2);
+        context.lineWidth = 1;
+        context.strokeStyle = lineColor;
+        context.stroke();
+        context.setLineDash([]);
+
+        context.beginPath();
+        context.moveTo(-1*(knobRadius+15), 0);
+        context.lineTo(knobRadius+15, 0);
+        context.lineWidth = 1;
+        context.strokeStyle = lineColor;
+        context.stroke();
+
+        // Draw Z Labels
+        context.save();
+        context.scale(1,-1);
+        context.font = "1em Arial";
+        context.fillStyle = lineColor;
+        context.fillText("Z+",5,-1*canvas.height/2+35);
+        context.fillText("Z-",5,canvas.height/2-22);
+        context.restore();
 
         // Draw Main Joystick Knob
         context.beginPath();
@@ -148,14 +277,38 @@
         context.stroke();
     }
 
-    function performJog() {
+    function performXYJog() {
         if(mouseClickDown) {
+            var maxFeedrate = maxXYFeedrate;
             var feedrate = ((currJoyDistance/maxDistance) * maxFeedrate).toFixed();
             var jogX = (currJoyX*(maxTravel/100)).toFixed(3);
             var jogY = (currJoyY*(maxTravel/100)).toFixed(3);
             var jogDist = Math.sqrt(Math.pow(jogX, 2) + Math.pow(jogY, 2)).toFixed(3);
-            jog(jogX, jogY, feedrate);
-            jogChangeTimeout = setTimeout(performJog, calcJogTimeMs(feedrate, jogDist));
+
+            if((jogX == 0 && jogY == 0) || feedrate == 0) {
+                jogChangeTimeout = setTimeout(performXYJog, 100);    
+                return;
+            }
+
+            jogXY(jogX, jogY, feedrate);
+            jogChangeTimeout = setTimeout(performXYJog, calcJogTimeMs(feedrate, jogDist));
+        }
+    }
+
+    function performZJog() {
+        if(mouseClickDown) {
+            var maxFeedrate = maxZFeedrate;
+            var feedrate = ((Math.abs(currJoyY)/maxDistance) * maxFeedrate).toFixed();
+            var jogY = ((currJoyY/maxDistance) * maxTravel).toFixed(3);
+            
+            if(jogY == 0 || feedrate == 0) {
+                jogChangeTimeout = setTimeout(performZJog, 100);    
+                return;
+            }
+
+            // Y axis is used for Z
+            jogZ(jogY, feedrate);
+            jogChangeTimeout = setTimeout(performZJog, calcJogTimeMs(feedrate, Math.abs(jogY)));
         }
     }
 
@@ -169,6 +322,11 @@
         if(event.targetTouches) {
             pageX = event.targetTouches[0].pageX;
             pageY = event.targetTouches[0].pageY;
+        }
+
+        var performJog = performXYJog;
+        if(jogMode === "Z") {
+            performJog = performZJog;
         }
 
         jogChangeTimeout = setTimeout(performJog, 100);
@@ -190,19 +348,32 @@
         var tempY = canvas.height-pageY+canvas.offsetTop-(canvas.height/2);
         var tempDist = Math.sqrt(Math.pow(tempX, 2) + Math.pow(tempY, 2)).toFixed();
 
+        if(jogMode === "Z") {
+            currJoyX = 0;
+            currJoyY = tempY;
+            currJoyDistance = Math.abs(tempY);
+
+            if(currJoyDistance > maxDistance) {
+                currJoyY = tempY * (maxDistance/currJoyDistance);
+            }
+
+            drawZJoystick(currJoyY);
+            return;
+        } 
+        
         if(tempDist <= maxDistance) {
             currJoyX = tempX;
             currJoyY = tempY;
             currJoyDistance = tempDist;
         } else {
             // Outside max - limit to bounds
-            console.log(maxDistance/tempDist);
+            //debug(maxDistance/tempDist);
             currJoyX = tempX * (maxDistance/tempDist);
             currJoyY = tempY * (maxDistance/tempDist);
             currJoyDistance = maxDistance;
         }
 
-        drawJoystick(currJoyX, currJoyY);
+        drawXYJoystick(currJoyX, currJoyY);
     }
 
     function onEnd(event) {
@@ -215,17 +386,17 @@
     }
 
     function onTouchStart(event) {
-        event.preventDefault();
+        if(event.srcElement.nodeName != "BUTTON") { event.preventDefault(); }
         onStart(event);
     }
 
     function onTouchMove(event) {
-        event.preventDefault();
+        if(event.srcElement.nodeName != "BUTTON") { event.preventDefault(); }
         onMove(event);
     }
 
     function onTouchEnd(event) {
-        event.preventDefault();
+        if(event.srcElement.nodeName != "BUTTON") { event.preventDefault(); }
         onEnd(event);
     }
 
@@ -240,6 +411,7 @@
     }
 
     // Add Touch and Mouse Event Listeners
+    
     canvas.addEventListener("touchstart", onTouchStart, passiveSupported ? { passive: false } : false);
     document.addEventListener("touchmove", onTouchMove, passiveSupported ? { passive: false } : false);
     document.addEventListener("touchend", onTouchEnd, passiveSupported ? { passive: false } : false);
@@ -276,6 +448,7 @@
         // Load calculation settings
         sendCommand("$/axes/x/acceleration_mm_per_sec2");
         sendCommand("$/axes/y/acceleration_mm_per_sec2");
+        sendCommand("$/axes/z/acceleration_mm_per_sec2");
         sendCommand("$/planner_blocks");
         
         // Download preferences.json to get XY Feedrate
@@ -297,6 +470,7 @@
 
         // Max acceleration along the jog vector - /axes/x(y)/acceleration_mm_per_sec2
         var a = Math.min(xAccel, yAccel); 
+        if(jogMode === "Z") { a = zAccel; }
 
         // Incremental distance of jog command
         // s = v * dt
@@ -320,17 +494,17 @@
         // Validate dt
         // dt > 10ms
         // dt > v^2 / (2 * a * (N-1))
-        console.log("F" + feedrate_mm_min + " R" + distance + " dt(ms)=" + (dt*1000).toFixed(3));
+        debug("F" + feedrate_mm_min + " R" + distance + " dt(ms)=" + (dt*1000).toFixed(3));
         
         var test = Math.pow(v, 2) / (2 * a * (N-1));
-        console.log("Calculated Min MS: " + test);
+        debug("Calculated Min MS: " + test);
         if(ms < test) {
             ms = test;
         }
 
         if(ms < 10) {
             ms = 10;
-            console.log("Min MS: " + ms);
+            debug("Min MS: " + ms);
         }
 
         return dt * 1000;
