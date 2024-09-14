@@ -1,23 +1,40 @@
 <style type="text/css">
 
     .joyjog {
-        text-align: center;
+        /*text-align: center;*/
         margin: 10px;
+        margin-top: 20px;
     }
 
     #joyJogDiv {
         width: 300px;
         height: 300px;
         margin: auto;
+        margin-bottom: 20px;
     }
 
-    #joyJogButtons {
+    .joyJogButton {
+        padding-left: 20px !important;
+        padding-right: 20px !important;
+    }
+
+    .joyJogButtons, .joyJogButtons button.btn {
+        cursor: pointer !important;
+    }
+
+    .joyjog legend {
         margin-top: 10px;
         margin-bottom: 10px;
     }
+    
+    .joyjog fieldset {
+        margin-top: 0px;
+        margin-bottom: 0px;
+    }
 
-    #joyJogButtons, #joyJogButtons button.btn {
-        cursor: pointer !important;
+    .joyjog .field-group-content {
+        padding-left: 0px;
+        padding-bottom: 0px;
     }
 
 </style>
@@ -26,11 +43,27 @@
     <div id="joyJogDiv">
         <canvas id="joyJogCanvas"></canvas>
     </div>
-    <div id="joyJogButtons">
-        <button class="btn m-1" onclick="cancelJog(); jogMode = 'XY'; drawXYJoystick(0,0);">Jog XY</button>  
-        <button class="btn m-1" onclick="cancelJog(); jogMode = 'Z'; drawZJoystick(0);">Jog Z</button>  
-        <button class="btn m-1" onclick="cancelJog()">Cancel Jog</button>  
-    </div>
+    <fieldset class="fieldset-top-separator field-group">
+        <legend><label class="m-1 buttons-bar-label">Jog Mode</label></legend>
+        <div class="field-group-content maxwidth">
+            <div class="status-buttons-container">
+                <button class="btn m-1 joyJogButton" onclick="cancelJog(); jogMode = 'XY'; drawXYJoystick(0,0);">XY</button>  
+                <button class="btn m-1 joyJogButton" onclick="cancelJog(); jogMode = 'Z'; drawZJoystick(0);">Z</button>
+                <button class="btn m-1" onclick="cancelJog()">Cancel</button>
+            </div>
+        </div>
+    </fieldset>
+    <fieldset class="fieldset-top-separator field-group">
+        <legend><label class="m-1 buttons-bar-label">Home</label></legend>
+        <div class="field-group-content maxwidth">
+            <div class="status-buttons-container">
+                <button class="btn m-1 joyJogButton" onclick="cancelJog(); sendCommand('$HX');">X</button>  
+                <button class="btn m-1 joyJogButton" onclick="cancelJog(); sendCommand('$HY');">Y</button>  
+                <button class="btn m-1 joyJogButton" onclick="cancelJog(); sendCommand('$HZ');">Z</button>  
+                <button class="btn m-1 joyJogButton" style="float: right;" onclick="cancelJog(); sendCommand('$H');">All</button>  
+            </div>
+        </div>
+    </fieldset>
 </div>
 
 <script type="text/javascript">
@@ -43,6 +76,7 @@
     var zAccel = 80;
     var plannerBlocks = 32;
     var jogMode = "XY";
+    var currentStatus = "Hold";
 
     function debug(msg) {
         console.log("JoyJog: " + msg);
@@ -62,12 +96,10 @@
     }
 
     function jogXY(x,y,feedrate) {
-        debug('$J=G91 G21 X' + x + ' Y' + y + ' F' + feedrate);
         sendCommand('$J=G91 G21 X' + x + ' Y' + y + ' F' + feedrate);
     }
 
     function jogZ(z,feedrate) {
-        debug('$J=G91 G21 Z' + z + ' F' + feedrate);
         sendCommand('$J=G91 G21 Z' + z + ' F' + feedrate);
     }
 
@@ -95,6 +127,14 @@
         }
     }
 
+    function processStatus(status) {
+        if(currentStatus !== status) {
+            debug("Status Change: " + currentStatus + " -> " + status);
+            currentStatus = status;
+            drawJoystick(0, 0);
+        }
+    }
+
     function processMessage(eventMsg) {
         // Process messages with a type that for this extension or non-specific
         if (eventMsg.data && (!eventMsg.data.id || eventMsg.data.id === extensionName || eventMsg.data.id === extensionName + "Setting")) {
@@ -111,6 +151,8 @@
                         debug("Max Z Feedrate: " + maxZFeedrate);
                     };
                     reader.readAsText(content.response);
+                } else if(eventMsg.data.type === "stream" && content.startsWith("<")) {
+                    processStatus(content.substring(1, content.indexOf("|")));
                 }
             }
         }
@@ -152,6 +194,11 @@
     }
 
     function drawXYJoystick(currX, currY) {
+        if(!isJogAllowed()) {
+            currX = 0;
+            currY = 0;
+        }
+
         // Clear
         context.clearRect(-1*canvas.width/2, -1*canvas.height/2, canvas.width, canvas.height);
 
@@ -198,7 +245,12 @@
         // Draw Main Joystick Knob
         context.beginPath();
         context.arc(currX, currY, knobRadius, 0, 2*Math.PI, false);
-        context.fillStyle = primaryColor;
+
+        if(isJogAllowed()) {
+            context.fillStyle = primaryColor;
+        } else {
+            context.fillStyle = backgroundColor;
+        }
         context.fill();
         context.lineWidth = 2;
         context.strokeStyle = lineColor;
@@ -212,11 +264,14 @@
         context.lineWidth = 2;
         context.strokeStyle = lineColor;
         context.stroke();
-
     }
 
     function drawZJoystick(currY) {
         currX = 0;
+
+        if(!isJogAllowed()) {
+            currY = 0;
+        }
 
         // Clear
         context.clearRect(-1*canvas.width/2, -1*canvas.height/2, canvas.width, canvas.height);
@@ -261,7 +316,11 @@
         // Draw Main Joystick Knob
         context.beginPath();
         context.arc(currX, currY, knobRadius, 0, 2*Math.PI, false);
-        context.fillStyle = primaryColor;
+        if(isJogAllowed()) {
+            context.fillStyle = primaryColor;
+        } else {
+            context.fillStyle = backgroundColor;
+        }
         context.fill();
         context.lineWidth = 2;
         context.strokeStyle = lineColor;
@@ -312,9 +371,16 @@
         }
     }
 
+    function isJogAllowed() {
+        return currentStatus === "Idle" || currentStatus === "Jog";
+    }
+
     function onStart(event) {
-        mouseClickDown = true;
-        
+        if(!isJogAllowed()) {
+            debug("Jog Disabled During " + currentStatus);
+            return;
+        }        
+
         var pageX = event.pageX;
         var pageY = event.pageY;
 
@@ -324,11 +390,29 @@
             pageY = event.targetTouches[0].pageY;
         }
 
-        var performJog = performXYJog;
-        if(jogMode === "Z") {
+        var tempX = pageX-canvas.offsetLeft-(canvas.width/2);
+        var tempY = canvas.height-pageY+canvas.offsetTop-(canvas.height/2);
+        var tempDist = Math.sqrt(Math.pow(tempX, 2) + Math.pow(tempY, 2)).toFixed();
+
+        var performJog;
+        
+        if(jogMode === "XY") {
+            // Don't start outside XY background
+            if(tempDist > maxDistance) {
+                return;
+            }
+            performJog = performXYJog;
+        } else if(jogMode === "Z") {
+            // Don't start outside Z background
+            if(Math.abs(tempX) > knobRadius || Math.abs(tempY) > maxDistance) {
+                return;
+            }
             performJog = performZJog;
+        } else {
+            debug("Unknown Jog Mode: " + jogMode);
         }
 
+        mouseClickDown = true;
         jogChangeTimeout = setTimeout(performJog, 100);
     }
 
@@ -367,7 +451,6 @@
             currJoyDistance = tempDist;
         } else {
             // Outside max - limit to bounds
-            //debug(maxDistance/tempDist);
             currJoyX = tempX * (maxDistance/tempDist);
             currJoyY = tempY * (maxDistance/tempDist);
             currJoyDistance = maxDistance;
@@ -391,7 +474,6 @@
     }
 
     function onTouchMove(event) {
-        if(event.srcElement.nodeName != "BUTTON") { event.preventDefault(); }
         onMove(event);
     }
 
