@@ -1,0 +1,111 @@
+<style type="text/css">
+    .holdMonitor {
+        margin: 5px;
+    }
+
+    .holdMonitor div.terminal {
+        white-space: unset;
+        word-break: normal;
+    }
+</style>
+
+<div class="holdMonitor">
+    <label class="m-1">Last Message</label>
+    <div id="currentMessage" class="panel-body panel-body-dashboard terminal m-1" style="height: 60px; overflow: auto !important;">
+        Unknown
+    </div>
+    <label class="m-1 buttons-bar-label">Hold History</label>
+    <div id="holdHistory" class="panel-body panel-body-dashboard terminal m-1" style="height: 390px; white-space: unset;">
+    </div>
+</div>
+
+<script type="text/javascript">
+    var extensionName = "holdmonitor";
+    var currentStatus = "None";
+    var currentMessage = "Unknown";
+
+    function debug(msg) {
+        console.log("Hold Monitor: " + msg);
+    }
+
+    function sendMessage(msg) {
+        window.parent.postMessage(msg, '*');
+    }
+
+    function sendCommand(command) {
+        debug("Send Command: " + command);
+        sendMessage({ type: "cmd", target: "webui", id: extensionName, content: command });
+    }
+
+    function sendModal() {
+        sendMessage
+        (
+            {
+                type:'modal', 
+                target:'webui', 
+                id:'modalpanel', 
+                content:
+                {
+                    title:'Hold', 
+                    id:'simple_modal', 
+                    style:'default', 
+                    bt1Txt:'Resume', 
+                    response1:'ok',
+                    text: currentMessage, 
+                    overlay:false
+                }
+            }
+        );
+        currentMessage = "Unknown";
+    }
+
+    function logHold(message) {
+        var date = new Date();
+        var timeString = 
+            ("0" + date.getHours()).slice(-2) + ":"
+            + ("0" + date.getMinutes()).slice(-2) + ":" 
+            + ("0" + date.getSeconds()).slice(-2) ;
+        
+        var history = document.getElementById("holdHistory");
+        history.innerHTML += timeString + " - " + message + "<br />";
+    }
+
+    function processStatus(status) {
+        if(currentStatus !== status) {
+            debug("Status Change: " + currentStatus + " -> " + status);
+            currentStatus = status;
+
+            if(currentStatus.startsWith("Hold")) {
+                logHold("Hold: " + currentMessage);
+                sendModal();
+            }
+        }
+    }
+
+    function processMessage(eventMsg) {
+        // Process messages with a type that for this extension or non-specific
+        if (eventMsg.data && eventMsg.data.content && (!eventMsg.data.id || eventMsg.data.id === "modalpanel")) {
+            var content = eventMsg.data.content;   
+
+            if(eventMsg.data.type === "stream") {
+
+                if(content.startsWith("[MSG")) {
+                    currentMessage = content.replace("[MSG:", "").replace("]", "").replace("MSG,", "").replace("PRINT,", "");
+                    document.getElementById("currentMessage").innerHTML = currentMessage;
+                } else if(content.startsWith("<")) {
+                    processStatus(content.substring(1, content.indexOf("|")));
+                }
+            }
+            else if(eventMsg.data.type === "modal") {
+                debug("Modal Returned - Resuming");
+                sendCommand("~");
+                logHold("Resume");
+            }
+        }
+    }
+
+    window.onload = (event) => {
+        // Required for message processing
+        window.addEventListener("message", processMessage, false);
+    };
+</script>
