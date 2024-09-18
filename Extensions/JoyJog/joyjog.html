@@ -1,7 +1,6 @@
 <style type="text/css">
 
     .joyjog {
-        /*text-align: center;*/
         margin: 10px;
         margin-top: 20px;
     }
@@ -40,9 +39,7 @@
 </style>
 
 <div class="joyjog">
-    <div id="joyJogDiv">
-        <canvas id="joyJogCanvas"></canvas>
-    </div>
+    <div id="joyJogDiv"></div>
     <fieldset class="fieldset-top-separator field-group">
         <legend><label class="m-1 buttons-bar-label">Jog Mode</label></legend>
         <div class="field-group-content maxwidth">
@@ -158,32 +155,40 @@
         }
     }
 
-    var canvas = document.getElementById("joyJogCanvas");
-    var parentDiv = document.getElementById("joyJogDiv");
-
+    var canvas, maxDistance, centerX, centerY, context;
     var primaryColor, lineColor, backgroundColor;
-
-    canvas.width = parentDiv.clientWidth;
-    canvas.height = parentDiv.clientHeight;
-
-    var knobRadius = 40;
-    var maxDistance = (canvas.width/2)-knobRadius;
-
     var mouseClickDown = false;
+    var knobRadius = 40;
 
     var jogChangeTimeout;
     var currJoyX = 0;
     var currJoyY = 0;
     var currJoyDistance = 0;
 
-    var centerX = canvas.width/2;
-    var centerY = canvas.height/2;
+    var parentDiv = document.getElementById("joyJogDiv");
 
-    var context = canvas.getContext("2d");
+    function initializeCanvas() {
+        canvas = document.createElement("canvas");
+        
+        canvas.width = parentDiv.clientWidth;
+        canvas.height = parentDiv.clientHeight;
+        
+        parentDiv.replaceChildren(canvas);
+        
+        maxDistance = (canvas.width/2)-knobRadius;    
 
-    // Work in standard coordinate system with 0,0 at the center
-    context.translate(centerX, centerY);
-    context.scale(1,-1);
+        centerX = canvas.width/2;
+        centerY = canvas.height/2;
+
+        context = canvas.getContext("2d");
+
+        // Work in standard coordinate system with 0,0 at the center
+        context.translate(centerX, centerY);
+        context.scale(1,-1);
+
+        // Set canvas colors based on theme styles
+        setColors();
+    }
 
     function drawJoystick(currX, currY) {
         if(jogMode === "XY") {
@@ -482,25 +487,27 @@
         onEnd(event);
     }
 
-    // https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#safely_detecting_option_support
-    let passiveSupported = false;
-    try {
-        const options = { get passive() { passiveSupported = true; return false; }, };
-        window.addEventListener("test", null, options);
-        window.removeEventListener("test", null, options);
-    } catch (err) {
-        passiveSupported = false;
+    function setupTouchEvents() {
+        // https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#safely_detecting_option_support
+        let passiveSupported = false;
+        try {
+            const options = { get passive() { passiveSupported = true; return false; }, };
+            window.addEventListener("test", null, options);
+            window.removeEventListener("test", null, options);
+        } catch (err) {
+            passiveSupported = false;
+        }
+
+        // Add Touch and Mouse Event Listeners
+        
+        canvas.addEventListener("touchstart", onTouchStart, passiveSupported ? { passive: false } : false);
+        document.addEventListener("touchmove", onTouchMove, passiveSupported ? { passive: false } : false);
+        document.addEventListener("touchend", onTouchEnd, passiveSupported ? { passive: false } : false);
+
+        canvas.addEventListener("mousedown", onStart, passiveSupported ? { passive: false } : false);
+        document.addEventListener("mousemove", onMove, passiveSupported ? { passive: false } : false);
+        document.addEventListener("mouseup", onEnd, passiveSupported ? { passive: false } : false);
     }
-
-    // Add Touch and Mouse Event Listeners
-    
-    canvas.addEventListener("touchstart", onTouchStart, passiveSupported ? { passive: false } : false);
-    document.addEventListener("touchmove", onTouchMove, passiveSupported ? { passive: false } : false);
-    document.addEventListener("touchend", onTouchEnd, passiveSupported ? { passive: false } : false);
-
-    canvas.addEventListener("mousedown", onStart, passiveSupported ? { passive: false } : false);
-    document.addEventListener("mousemove", onMove, passiveSupported ? { passive: false } : false);
-    document.addEventListener("mouseup", onEnd, passiveSupported ? { passive: false } : false);
 
     function setColors() {
         // Style Canvas with CSS - https://stackoverflow.com/a/67124914
@@ -536,15 +543,15 @@
         // Download preferences.json to get XY Feedrate
         sendMessage({type: 'download', target: 'webui', id: extensionName, url: 'preferences.json'});
 
-        // Set canvas colors based on theme styles
-        setTimeout(setColors, 100);
+        initializeCanvas();
+        setupTouchEvents();
     }
 
     window.onload = (event) => {
         // Required for message processing
         window.addEventListener("message", processMessage, false);
 
-        init();
+        setTimeout(function() { init(); }, 100);
     };
 
     // https://github.com/gnea/grbl/wiki/Grbl-v1.1-Jogging#joystick-implementation
