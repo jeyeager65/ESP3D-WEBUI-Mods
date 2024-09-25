@@ -109,16 +109,52 @@ section .active, .mobile-view section .active {
     background-color: var(--secondary) !important; /* 7c1006 */
 }
 
-/* Allow panel to shrink height */
 .panel {
-    height: auto;
-    max-height: 550px;
     margin: 5px;
 }
 
-.panel-body-dashboard iframe {
-    min-height: 515px;
+/* Allow non-extension panels to shrink height */
+#statusPanel.panel,
+#terminalPanel.panel,
+#macrosPanel.panel,
+#jogPanel.panel,
+#filesPanel.panel,
+#SpindlePanel.panel,
+#laserPanel.panel,
+#ProbePanel.panel,
+#OverridesPanel.panel,
+#notificationsPanel.panel {
+    height: auto !important;
+    max-height: 550px !important;
+}
+
+#statusPanel .panel-body-dashboard iframe,
+#terminalPanel .panel-body-dashboard iframe,
+#macrosPanel .panel-body-dashboard iframe,
+#jogPanel .panel-body-dashboard iframe,
+#filesPanel .panel-body-dashboard iframe,
+#SpindlePanel .panel-body-dashboard iframe,
+#laserPanel .panel-body-dashboard iframe,
+#ProbePanel .panel-body-dashboard iframe,
+#OverridesPanel .panel-body-dashboard iframe,
+#notificationsPanel .panel-body-dashboard iframe {
+    min-height: 515px !important;
     overflow-y: hidden !important;
+}
+
+.extra-content-container {
+    color: #ffffff;
+    background-color: var(--panelbkgd);
+}
+
+.macro-buttons-panel {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.macro-buttons-panel button {
+    flex: 1 1 20% !important;
+    margin: 10px !important;
 }
 
 /***** TERMINAL PANEL */
@@ -588,6 +624,10 @@ div#infopage {
         linear-gradient(0deg, var(--highlight) 50%,transparent 50%);
     background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
     background-size: 15px 4px, 15px 4px, 4px 15px, 4px 15px;
+}
+
+.footer-container {
+    height: 3rem;
 }
 
 /* Tablet Extension */
