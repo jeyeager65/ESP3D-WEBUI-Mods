@@ -2,8 +2,10 @@
 
 This is a panel extension that provides a virtual joystick for jogging.
 
-![image](https://github.com/user-attachments/assets/1a377592-966b-475c-ac4b-908a4668ad20)
-![image](https://github.com/user-attachments/assets/f71a51b2-56e9-46bc-bcb5-d16a806d8d9a)
+![image](https://github.com/user-attachments/assets/2ed07bad-e9b6-47df-82da-f5be51389343)
+![image](https://github.com/user-attachments/assets/617c3af0-5529-4dad-a828-7d1aeda9f267)
+![image](https://github.com/user-attachments/assets/d5965d30-1d0b-42aa-aa7e-70a67f7a32a7)
+![image](https://github.com/user-attachments/assets/5e122390-6036-45e8-867d-c8c411b65ce4)
 
 ## Usage
 > [!WARNING]
@@ -12,12 +14,17 @@ This is a panel extension that provides a virtual joystick for jogging.
 - Joystick
   - Mouse - Click and drag the center circle.  The machine will move at the specified direction at a feedrate proportional to the distance from the center.  Releasing the mouse click will cancel the current jog.
   - Touch - Similar to mouse.  Touch and drag the center circle.  Lifting the finger will cancel the current jog.
-- Jog XY Button
-  - Click to display XY jog.  This is the default.
-- Jog Z Button
-  - Click to display Z jog.
-- Cancel Jog Button
-  - If the jog is not cancelling as expected, this can be clicked to cancel the current jog.  Typically this is not needed but in some circumstances it can be helpful.
+- Jog Mode
+  - XY - Click to display XY jog.  This is the default.
+  - X - Click to display X jog only.
+  - Y - Click to display Y jog only.
+  - Z - Click to display Z jog only.
+  - Cancel Jog Button - If the jog is not cancelling as expected, this can be clicked to cancel the current jog.  Typically this is not needed but in some circumstances it can be helpful.
+- Home
+  - X - Home X
+  - Y - Home Y
+  - Z - Home Z
+  - All - Home All
 
 ## Setup
 - Upload joyjog.html.gz to Flash
