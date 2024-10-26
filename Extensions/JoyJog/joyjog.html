@@ -13,8 +13,8 @@
     }
 
     .joyJogButton {
-        padding-left: 20px !important;
-        padding-right: 20px !important;
+        padding-left: 15px !important;
+        padding-right: 15px !important;
     }
 
     .joyJogButtons, .joyJogButtons button.btn {
@@ -45,7 +45,9 @@
         <div class="field-group-content maxwidth">
             <div class="status-buttons-container">
                 <button class="btn m-1 joyJogButton" onclick="cancelJog(); jogMode = 'XY'; drawXYJoystick(0,0);">XY</button>  
-                <button class="btn m-1 joyJogButton" onclick="cancelJog(); jogMode = 'Z'; drawZJoystick(0);">Z</button>
+                <button class="btn m-1 joyJogButton" onclick="cancelJog(); jogMode = 'X'; drawXJoystick(0,0);">X</button>
+                <button class="btn m-1 joyJogButton" onclick="cancelJog(); jogMode = 'Y'; drawYJoystick(0,0);">Y</button>
+                <button class="btn m-1 joyJogButton" onclick="cancelJog(); jogMode = 'Z'; drawYJoystick(0);">Z</button>
                 <button class="btn m-1" onclick="cancelJog()">Cancel</button>
             </div>
         </div>
@@ -94,6 +96,14 @@
 
     function jogXY(x,y,feedrate) {
         sendCommand('$J=G91 G21 X' + x + ' Y' + y + ' F' + feedrate);
+    }
+
+    function jogX(x,feedrate) {
+        sendCommand('$J=G91 G21 X' + x + ' F' + feedrate);
+    }
+
+    function jogY(y,feedrate) {
+        sendCommand('$J=G91 G21 Y' + y + ' F' + feedrate);
     }
 
     function jogZ(z,feedrate) {
@@ -193,8 +203,10 @@
     function drawJoystick(currX, currY) {
         if(jogMode === "XY") {
             drawXYJoystick(currX, currY);
-        } else {
-            drawZJoystick(currY);
+        } else if(jogMode === "Y" || jogMode === "Z") {
+            drawYJoystick(currY);
+        } else if(jogMode === "X") {
+            drawXJoystick(currX);
         }
     }
 
@@ -247,31 +259,60 @@
         context.fillText("X+",canvas.width/2-30,-5);
         context.restore();
 
-        // Draw Main Joystick Knob
-        context.beginPath();
-        context.arc(currX, currY, knobRadius, 0, 2*Math.PI, false);
-
-        if(isJogAllowed()) {
-            context.fillStyle = primaryColor;
-        } else {
-            context.fillStyle = backgroundColor;
-        }
-        context.fill();
-        context.lineWidth = 2;
-        context.strokeStyle = lineColor;
-        context.stroke();
-
-        // Draw Joystick Knob Inner Circle
-        context.beginPath();
-        context.arc(currX, currY, 10, 0, 2 * Math.PI);
-        context.fillStyle = lineColor;
-        context.fill();
-        context.lineWidth = 2;
-        context.strokeStyle = lineColor;
-        context.stroke();
+        drawJoystickKnob(currX, currY);
     }
 
-    function drawZJoystick(currY) {
+    function drawXJoystick(currX) {
+        currY = 0;
+
+        if(!isJogAllowed()) {
+            currX = 0;
+        }
+
+        // Clear
+        context.clearRect(-1*canvas.width/2, -1*canvas.height/2, canvas.width, canvas.height);
+
+        // Draw X Background
+        context.beginPath();
+        context.lineWidth = 3;
+        context.strokeStyle = lineColor;
+        context.arc(85, 0, knobRadius-15, -Math.PI/2, Math.PI/2);
+        context.arc(-85, 0, knobRadius-15, Math.PI/2, -Math.PI/2);
+        context.lineTo(85, -knobRadius+15);
+        context.stroke();
+        context.fillStyle = backgroundColor;
+        context.fill();
+        
+        // Draw X Axis
+        context.beginPath();
+        context.setLineDash([7, 7]);
+        context.moveTo(-1*canvas.width/2, 0);
+        context.lineTo(canvas.width/2, 0);
+        context.lineWidth = 1;
+        context.strokeStyle = lineColor;
+        context.stroke();
+        context.setLineDash([]);
+
+        context.beginPath();
+        context.moveTo(0, -1*(knobRadius+15));
+        context.lineTo(0, knobRadius+15);
+        context.lineWidth = 1;
+        context.strokeStyle = lineColor;
+        context.stroke();
+
+        // Draw Z Labels
+        context.save();
+        context.scale(1,-1);
+        context.font = "1em Arial";
+        context.fillStyle = lineColor;
+        context.fillText("X-",-1*canvas.width/2+10,-5);
+        context.fillText("X+",canvas.width/2-30,-5);
+        context.restore();
+
+        drawJoystickKnob(currX, currY);
+    }
+
+    function drawYJoystick(currY) {
         currX = 0;
 
         if(!isJogAllowed()) {
@@ -281,7 +322,7 @@
         // Clear
         context.clearRect(-1*canvas.width/2, -1*canvas.height/2, canvas.width, canvas.height);
 
-        // Draw Z Background
+        // Draw Y Background
         context.beginPath();
         context.lineWidth = 3;
         context.strokeStyle = lineColor;
@@ -292,7 +333,7 @@
         context.fillStyle = backgroundColor;
         context.fill();
 
-        // Draw Z Axis
+        // Draw Y Axis
         context.beginPath();
         context.setLineDash([7, 7]);
         context.moveTo(0, -1*canvas.height/2);
@@ -309,15 +350,19 @@
         context.strokeStyle = lineColor;
         context.stroke();
 
-        // Draw Z Labels
+        // Draw Y Labels
         context.save();
         context.scale(1,-1);
         context.font = "1em Arial";
         context.fillStyle = lineColor;
-        context.fillText("Z+",5,-1*canvas.height/2+35);
-        context.fillText("Z-",5,canvas.height/2-22);
+        context.fillText(jogMode + "+",5,-1*canvas.height/2+35);
+        context.fillText(jogMode + "-",5,canvas.height/2-22);
         context.restore();
 
+        drawJoystickKnob(currX, currY);
+    }
+
+    function drawJoystickKnob(currX, currY) {
         // Draw Main Joystick Knob
         context.beginPath();
         context.arc(currX, currY, knobRadius, 0, 2*Math.PI, false);
@@ -359,20 +404,40 @@
         }
     }
 
-    function performZJog() {
+    function performXJog() {
         if(mouseClickDown) {
-            var maxFeedrate = maxZFeedrate;
-            var feedrate = ((Math.abs(currJoyY)/maxDistance) * maxFeedrate).toFixed();
-            var jogY = ((currJoyY/maxDistance) * maxTravel).toFixed(3);
+            var maxFeedrate = maxXYFeedrate;
+            var feedrate = ((Math.abs(currJoyX)/maxDistance) * maxFeedrate).toFixed();
+            var newJogX = ((currJoyX/maxDistance) * maxTravel).toFixed(3);
             
-            if(jogY == 0 || feedrate == 0) {
-                jogChangeTimeout = setTimeout(performZJog, 100);    
+            if(newJogX == 0 || feedrate == 0) {
+                jogChangeTimeout = setTimeout(performXJog, 100);    
+                return;
+            }
+
+            jogX(newJogX, feedrate);
+            jogChangeTimeout = setTimeout(performXJog, calcJogTimeMs(feedrate, Math.abs(newJogX)));
+        }
+    }
+
+    function performYJog() {
+        if(mouseClickDown) {
+            var maxFeedrate = jogMode === "Y" ? maxXYFeedrate : maxZFeedrate;
+            var feedrate = ((Math.abs(currJoyY)/maxDistance) * maxFeedrate).toFixed();
+            var newJogY = ((currJoyY/maxDistance) * maxTravel).toFixed(3);
+            
+            if(newJogY == 0 || feedrate == 0) {
+                jogChangeTimeout = setTimeout(performYJog, 100);    
                 return;
             }
 
             // Y axis is used for Z
-            jogZ(jogY, feedrate);
-            jogChangeTimeout = setTimeout(performZJog, calcJogTimeMs(feedrate, Math.abs(jogY)));
+            if(jogMode === "Y") {
+                jogY(newJogY, feedrate);
+            } else if(jogMode === "Z") {
+                jogZ(newJogY, feedrate);
+            }
+            jogChangeTimeout = setTimeout(performYJog, calcJogTimeMs(feedrate, Math.abs(newJogY)));
         }
     }
 
@@ -407,12 +472,18 @@
                 return;
             }
             performJog = performXYJog;
-        } else if(jogMode === "Z") {
-            // Don't start outside Z background
+        } else if(jogMode === "Y" || jogMode === "Z") {
+            // Don't start outside Y background
             if(Math.abs(tempX) > knobRadius || Math.abs(tempY) > maxDistance) {
                 return;
             }
-            performJog = performZJog;
+            performJog = performYJog;
+        } else if(jogMode === "X") {
+            // Don't start outside X background
+            if(Math.abs(tempY) > knobRadius || Math.abs(tempX) > maxDistance) {
+                return;
+            }
+            performJog = performXJog;
         } else {
             debug("Unknown Jog Mode: " + jogMode);
         }
@@ -437,7 +508,18 @@
         var tempY = canvas.height-pageY+canvas.offsetTop-(canvas.height/2);
         var tempDist = Math.sqrt(Math.pow(tempX, 2) + Math.pow(tempY, 2)).toFixed();
 
-        if(jogMode === "Z") {
+        if(jogMode === "X") {
+            currJoyX = tempX;
+            currJoyY = 0;
+            currJoyDistance = Math.abs(tempX);
+
+            if(currJoyDistance > maxDistance) {
+                currJoyX = tempX * (maxDistance/currJoyDistance);
+            }
+
+            drawXJoystick(currJoyX);
+        } 
+        else if(jogMode === "Y" || jogMode === "Z") {
             currJoyX = 0;
             currJoyY = tempY;
             currJoyDistance = Math.abs(tempY);
@@ -446,22 +528,21 @@
                 currJoyY = tempY * (maxDistance/currJoyDistance);
             }
 
-            drawZJoystick(currJoyY);
-            return;
-        } 
-        
-        if(tempDist <= maxDistance) {
-            currJoyX = tempX;
-            currJoyY = tempY;
-            currJoyDistance = tempDist;
+            drawYJoystick(currJoyY);
         } else {
-            // Outside max - limit to bounds
-            currJoyX = tempX * (maxDistance/tempDist);
-            currJoyY = tempY * (maxDistance/tempDist);
-            currJoyDistance = maxDistance;
-        }
+            if(tempDist <= maxDistance) {
+                currJoyX = tempX;
+                currJoyY = tempY;
+                currJoyDistance = tempDist;
+            } else {
+                // Outside max - limit to bounds
+                currJoyX = tempX * (maxDistance/tempDist);
+                currJoyY = tempY * (maxDistance/tempDist);
+                currJoyDistance = maxDistance;
+            }
 
-        drawXYJoystick(currJoyX, currJoyY);
+            drawXYJoystick(currJoyX, currJoyY);
+        }
     }
 
     function onEnd(event) {
@@ -560,6 +641,8 @@
         // Max acceleration along the jog vector - /axes/x(y)/acceleration_mm_per_sec2
         var a = Math.min(xAccel, yAccel); 
         if(jogMode === "Z") { a = zAccel; }
+        else if(jogMode === "X") { a = xAccel; }
+        else if(jogMode === "Y") { a = yAccel; }
 
         // Incremental distance of jog command
         // s = v * dt
