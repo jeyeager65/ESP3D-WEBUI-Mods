@@ -142,6 +142,12 @@ section .active, .mobile-view section .active {
     overflow-y: hidden !important;
 }
 
+#filesPanel .form-control {
+    color: #ffffff;
+    padding: 0.2rem;
+    vertical-align: center;
+}
+
 .extra-content-container {
     color: #ffffff;
     background-color: var(--panelbkgd);
@@ -303,6 +309,14 @@ div.extra-control-value {
 
 .badge-container .badge-label {
     background-color: var(--buttonbkgd) !important;
+}
+
+.badge-container.bg-primary, .badge-container .badge-label.bg-primary {
+    background-color: var(--highlight) !important;
+}
+
+div.file-line:hover {
+    background-color: transparent;
 }
 
 div.file-line.form-control {
