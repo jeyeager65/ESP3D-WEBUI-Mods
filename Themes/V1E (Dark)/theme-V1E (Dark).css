@@ -26,8 +26,11 @@ svg.esp3dlogo :nth-child(8)
 
 /* Change the font */
 body {
-    font-family: Roboto, sans-serif;
     background-color: var(--bkgd);
+}
+
+.body-extension {
+    background-color: var(--panelbkgd);
 }
 
 /* Default Text Color - Affects Probe Status Color */
@@ -62,11 +65,6 @@ body {
 }
 
 /***** HEADER *****/
-
-/* Shrink the height of the FluidNC logo to make the header shorter */
-.navbar svg {
-    max-height: 25px;
-}
 
 /* Header Colors */
 .navbar, .navbar-section {
@@ -109,66 +107,14 @@ section .active, .mobile-view section .active {
     background-color: var(--secondary) !important; /* 7c1006 */
 }
 
-.panel {
-    margin: 5px;
-}
-
-/* Allow non-extension panels to shrink height */
-#statusPanel.panel,
-#terminalPanel.panel,
-#macrosPanel.panel,
-#jogPanel.panel,
-#filesPanel.panel,
-#SpindlePanel.panel,
-#laserPanel.panel,
-#ProbePanel.panel,
-#OverridesPanel.panel,
-#notificationsPanel.panel {
-    height: auto !important;
-    max-height: 550px !important;
-}
-
-#statusPanel .panel-body-dashboard iframe,
-#terminalPanel .panel-body-dashboard iframe,
-#macrosPanel .panel-body-dashboard iframe,
-#jogPanel .panel-body-dashboard iframe,
-#filesPanel .panel-body-dashboard iframe,
-#SpindlePanel .panel-body-dashboard iframe,
-#laserPanel .panel-body-dashboard iframe,
-#ProbePanel .panel-body-dashboard iframe,
-#OverridesPanel .panel-body-dashboard iframe,
-#notificationsPanel .panel-body-dashboard iframe {
-    min-height: 515px !important;
-    overflow-y: hidden !important;
-}
-
 #filesPanel .form-control {
     color: #ffffff;
     padding: 0.2rem;
-    vertical-align: center;
 }
 
 .extra-content-container {
     color: #ffffff;
     background-color: var(--panelbkgd);
-}
-
-.macro-buttons-panel {
-    margin-top: 20px;
-    margin-bottom: 20px;
-}
-
-.macro-buttons-panel button {
-    flex: 1 1 20% !important;
-    margin: 10px !important;
-}
-
-/***** TERMINAL PANEL */
-
-/* Ensure terminal output has minimum height */
-.panel .panel-body.terminal {
-    height: 200px;
-    min-height: 200px !important;
 }
 
 /***** EMPTY SCREEN - Used for loading/disconnected screens */
@@ -182,6 +128,10 @@ section .active, .mobile-view section .active {
     background-color: var(--highlight); /* Header Color */ 
 }
 
+.empty .empty-icon div.p-centered svg.esp3dlogo {
+    height: 50px;
+}
+
 .empty div.centered {
     border: 1px solid #ffffff !important;
     background-color: var(--panelbkgd) !important;
@@ -190,10 +140,6 @@ section .active, .mobile-view section .active {
 
 .panel {
     background-color: var(--panelbkgd);
-}
-
-.panel .panel-body {
-    overflow-y: visible;
 }
 
 .file-line-action:active {
@@ -213,15 +159,9 @@ section .active, .mobile-view section .active {
     color: #a3a3a3;
 }
 
-.tab {
-    margin-top: 0.5rem;
-    border: none;
-}
-
 .mobile-view .tab-item a.active, .tab-item a.active {
     background-color: var(--panelbkgd) !important;
     border-color: var(--highlight) !important;
-    border-width: 0rem;
     border-bottom: 0.15rem solid var(--highlight);
 }
 
@@ -288,10 +228,6 @@ button#btnStop:hover svg, button#btnStop:active svg {
 .form-switch input:checked+.form-icon {
     background: var(--highlight);
     border-color: var(--highlight)
-}
-
-div.status-ctrls {
-    margin: 0.4rem 0.2rem;
 }
 
 div.extra-control-header {
@@ -381,7 +317,6 @@ div#settings .comment {
     padding-top: 10px;
     background-color: transparent;
     color: #ffffff;
-    padding-left: 0px;
 }
 
 div#settings label.hide-low {
@@ -518,36 +453,11 @@ input[type='radio']:checked + label {
     background-color: var(--secondary) !important;
 }
 
-.menu .menu-item>a {
-    padding-top: 0.3rem;
-    padding-bottom: 0rem;
-}
-
 .menu .menu-item>a:focus, .menu .menu-item>a:hover {
     color: #ffffff !important;
     background-color: var(--secondary) !important;  
 }
 
-.menu .menu-panel-item {
-    padding-top: 0.2rem;
-}
-
-.menu .menu-item > .menu-entry {
-    padding: 0.2rem 0.4rem;
-}
-
-.menu-panel-item .feather-icon-container {
-    margin-top: 0rem;
-    padding-top: 0.1rem;
-}
-
-.btn-xs, .btn.btn-screen  {
-    padding-left: 10px;
-    padding-right: 10px;
-    margin-left: 20px;
-    margin-right: 20px;
-    width: auto;
-}
 
 .btn-header:hover,
 .btn-close:hover,
@@ -592,15 +502,6 @@ input[type='radio']:checked + label {
         background-color: var(--buttonbkgd);
         border-color: #ffffff;
     }
-    /* Always show macro button label */
-    div.macro-buttons-panel .hide-low {
-        display: inline-block !important;    
-    }
-}
-
-/* Always show macro button label */
-.mobile-view div.macro-buttons-panel .hide-low {
-    display: inline-block !important;    
 }
 
 /* Custom Logo */
@@ -620,16 +521,6 @@ input[type='radio']:checked + label {
     }
 }
 
-@media (max-width: 600px) {
-    div#menu .hide-low {
-        display: none !important;
-    }
-}
-
-div#infopage {
-    width: 98%;
-}
-
 .drop-zone--over {
     background:  
         linear-gradient(90deg, var(--highlight) 50%,transparent 50%),
@@ -640,126 +531,6 @@ div#infopage {
     background-size: 15px 4px, 15px 4px, 4px 15px, 4px 15px;
 }
 
-.footer-container {
-    height: 3rem;
+div#tablet-dropdown-menu.menu {
+    background-color: white;
 }
-
-/* Tablet Extension */
-
-#tablettab {
-color: white;
-background-color: inherit;
-}
-
-#tablettab input, #tablettab select, #tablettab button {
-color: #ffffff;
-background-color: var(--buttonbkgd) !important;
-}
-
-#tablettab .btn-tablet:hover {
-background: #e0e0e0 !important;
-color: black;
-}
-#tablettab .btn-tablet:active {
-background: #d0f0d0 !important;
-color: black;
-}
-#tablettab .btn-tablet:disabled {
-background: #f0f0f0 !important;
-color: black;
-}
-#tablettab .btn-tablet {
-border: 0.05rem solid #ffffff;
-color: #ffffff;
-background-color: var(--buttonbkgd);
-border-color: #ffffff;
-}
-
-#tablettab #nav-panel {
-margin-bottom: 3px;
-}
-
-#tablettab .messages {
-border-color: rgb(118, 118, 118);
-}
-#tablettab #messages {
-color: white;
-background-color: var(--buttonbkgd);
-}
-#tablettab #gcode-states {
-color: white;
-background-color: black;
-}
-#tablettab #gcode {
-font-family: "SF Mono", "Segoe UI Mono", "Roboto Mono", Menlo, Courier, monospace;
-color: white;
-background-color: var(--buttonbkgd);
-}
-
-#tablettab #axis-position,
-#tablettab #mdifiles,
-#tablettab #setAxis {
-background-color: var(--secondary);
-}
-
-#tablettab #control-pad {
-background-color: var(--panelbkgd);
-}
-#tablettab .mposition {
-color: white;
-}
-
-#tablettab #gcode, 
-#tablettab .mdi-entry, 
-#tablettab #messages {
-border: 0.05rem solid white;
-}
-
-#tablettab #toolpath, #tablettab #gcode-states {
-    border: 0.05rem solid black;
-}
-
-/* (A) WRAPPER */
-#tablettab #numWrap {
-background: rgba(0, 0, 0, 0.7);
-}
-
-/* (B) NUMPAD */
-#tablettab #numPad {
-background: #eaeaea;
-}
-
-/* (C) DISPLAY */
-#tablettab #numDisplay {
-background: #fff;
-border: 1px solid #c1c1c1;
-color: #000;
-}
-
-/* (E) BUTTONS */
-#tablettab #numBWrap div {
-border: 1px solid #c1c1c1;
-}
-#tablettab #numBWrap .num, #tablettab #numBWrap .zero, #tablettab #numBWrap .dot { background: #fff; }
-#tablettab #numBWrap .del, #tablettab #numBWrap .clr { background: #ffecd7; }
-#tablettab #numBWrap .cx { background: #dadada; }
-#tablettab #numBWrap .cxwide { background: #dadada; }
-#tablettab #numBWrap .ok { background: #e7f3ff; }
-
-#tablettab #numBWrap .recall  { background: #ffecd7; }
-#tablettab #numBWrap .get     { background: #ffecd7; }
-#tablettab #numBWrap .set     { background: #55ffd7; }
-#tablettab #numBWrap .goto    { background: #ff5555; }
-
-@media (max-width: 720px) {
-
-    body,
-    #tablettab #axis-position,
-    #tablettab #mdifiles,
-    #tablettab #setAxis {
-        background-color: var(--panelbkgd);
-    }
-
-}
-
-/* End Tablet Extension */
