@@ -1,0 +1,10 @@
+{
+    "name": "Joystick Jogging",
+    "description": "Virtual joystick for jogging XY, X, Y, and Z axes.",
+    "version": "1.0.0",
+    "entry": "index.html",
+    "icon": "icon.png",
+    "layout": "controls",
+    "layoutMobile": "full",
+    "files": ["index.html", "style.css", "joyjog.js", "icon.png"]
+}

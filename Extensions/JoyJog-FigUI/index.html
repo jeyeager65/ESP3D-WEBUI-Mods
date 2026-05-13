@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>JoyJog</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <section class="panel">
+        <header class="panel-header">
+            <span>Joystick</span>
+            <span class="spacer"></span>
+            <span class="tag" id="stateTag">—</span>
+            <button class="icon-btn" id="settingsBtn" type="button" aria-label="Settings" title="Settings">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                     stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </button>
+        </header>
+        <div class="panel-body">
+            <div id="joyJogDiv"></div>
+            <div class="row mode-row">
+                <button class="btn btn-ghost mode-btn active" data-mode="XY">XY</button>
+                <button class="btn btn-ghost mode-btn" data-mode="X">X</button>
+                <button class="btn btn-ghost mode-btn" data-mode="Y">Y</button>
+                <button class="btn btn-ghost mode-btn" data-mode="Z">Z</button>
+                <span class="spacer"></span>
+                <button class="btn btn-danger" id="cancelBtn">Cancel</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <header class="panel-header">
+            <span>Home</span>
+        </header>
+        <div class="panel-body">
+            <div class="row">
+                <button class="btn btn-ghost" id="homeX">X</button>
+                <button class="btn btn-ghost" id="homeY">Y</button>
+                <button class="btn btn-ghost" id="homeZ">Z</button>
+                <span class="spacer"></span>
+                <button class="btn btn-primary" id="homeAll">All</button>
+            </div>
+        </div>
+    </section>
+
+    <div class="modal-backdrop" id="settingsModal" hidden>
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+            <header class="panel-header">
+                <span id="settingsTitle">Settings</span>
+                <span class="spacer"></span>
+                <button class="icon-btn" id="settingsCloseBtn" type="button" aria-label="Close" title="Close">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                         stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </header>
+            <div class="panel-body">
+                <div class="settings-grid">
+                    <label>
+                        <span>Max XY feedrate (mm/min)</span>
+                        <input class="input-field" type="number" id="setXYFeed" min="1" step="100">
+                    </label>
+                    <label>
+                        <span>Max Z feedrate (mm/min)</span>
+                        <input class="input-field" type="number" id="setZFeed" min="1" step="100">
+                    </label>
+                </div>
+                <div class="row modal-actions">
+                    <span class="spacer"></span>
+                    <button class="btn btn-ghost" id="settingsCancelBtn" type="button">Cancel</button>
+                    <button class="btn btn-primary" id="saveBtn" type="button">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="joyjog.js"></script>
+</body>
+</html>

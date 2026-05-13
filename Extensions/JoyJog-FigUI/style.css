@@ -1,0 +1,316 @@
+/* JoyJog (FigUI) — styles mirror the FigUI design system
+   (.panel, .panel-header, .btn variants, .input-field, .tag)
+   so the plugin blends in with the controls column. Plugins
+   run in sandboxed iframes and don't inherit FigUI's stylesheet,
+   so the relevant rules are duplicated here using the injected
+   :root theme variables. */
+
+:root {
+    color-scheme: dark light;
+}
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    background: var(--bg, #0c1018);
+    color: var(--text-primary, #e2e6f4);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* ---------- Panel (matches FigUI .panel / .panel-header) ---------- */
+
+.panel {
+    background: var(--surface, #141926);
+    border: 1px solid var(--border, #2a3140);
+    border-radius: 3px;
+}
+
+.panel-header {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border, #2a3140);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted, #a0a8bc);
+}
+
+.panel-body {
+    padding: 10px 12px;
+}
+
+.spacer {
+    flex: 1;
+}
+
+/* ---------- Rows ---------- */
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.mode-row {
+    margin-top: 8px;
+}
+
+/* ---------- Icon button (header chrome) ---------- */
+
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border-radius: 3px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-muted, #a0a8bc);
+    cursor: pointer;
+    transition: all 100ms;
+}
+
+.icon-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgb(var(--accent-rgb, 240 160 48) / 0.35);
+}
+
+.icon-btn:active:not(:disabled) {
+    transform: scale(0.96);
+}
+
+@media (hover: hover) {
+    .icon-btn:hover:not(:disabled) {
+        background: var(--elevated, #1b2030);
+        border-color: var(--border, #2a3140);
+        color: var(--text-primary, #e2e6f4);
+    }
+}
+
+/* ---------- Modal (settings popup) ---------- */
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgb(0 0 0 / 0.5);
+    animation: fade-in 120ms ease-out;
+}
+
+.modal-backdrop[hidden] {
+    display: none;
+}
+
+.modal {
+    width: 100%;
+    max-width: 320px;
+    background: var(--surface, #141926);
+    border: 1px solid var(--border, #2a3140);
+    border-radius: 3px;
+    box-shadow: 0 10px 30px rgb(0 0 0 / 0.4);
+    animation: modal-in 150ms ease-out;
+}
+
+.settings-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.settings-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text-muted, #a0a8bc);
+}
+
+.settings-grid .input-field {
+    width: 100%;
+}
+
+.modal-actions {
+    margin-top: 4px;
+}
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes modal-in {
+    from { opacity: 0; transform: scale(0.97) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ---------- Buttons (matches FigUI .btn / variants) ---------- */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 3px;
+    border-width: 1px;
+    border-style: solid;
+    cursor: pointer;
+    user-select: none;
+    transition: all 100ms;
+    background: transparent;
+    color: var(--text-primary, #e2e6f4);
+    border-color: var(--border, #2a3140);
+    line-height: 1.2;
+}
+
+.btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgb(var(--accent-rgb, 240 160 48) / 0.35);
+}
+
+.btn:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--text-primary, #e2e6f4);
+    border-color: var(--border, #2a3140);
+}
+
+.btn-primary {
+    background: var(--accent, #f0a030);
+    color: #fff;
+    border-color: var(--accent-hover, var(--accent, #f0a030));
+}
+
+.btn-danger {
+    background: rgb(var(--danger-rgb, 239 68 68) / 0.08);
+    color: var(--danger, #e85a5a);
+    border-color: rgb(var(--danger-rgb, 239 68 68) / 0.35);
+}
+
+@media (hover: hover) {
+    .btn-ghost:hover:not(:disabled) {
+        background: var(--elevated, #1b2030);
+        border-color: var(--border-strong, #3a4254);
+    }
+    .btn-primary:hover:not(:disabled) {
+        background: var(--accent-hover, var(--accent, #f0a030));
+    }
+    .btn-danger:hover:not(:disabled) {
+        background: rgb(var(--danger-rgb, 239 68 68) / 0.16);
+    }
+}
+
+/* Active mode toggle — matches FigUI's .step-btn[data-active] soft-accent style */
+.btn.mode-btn.active {
+    background: rgb(var(--accent-rgb, 240 160 48) / 0.15);
+    border-color: rgb(var(--accent-rgb, 240 160 48) / 0.5);
+    color: var(--accent, #f0a030);
+}
+
+/* ---------- Inputs (matches FigUI .input-field) ---------- */
+
+.input-field {
+    background: var(--elevated, #1b2030);
+    border: 1px solid var(--border, #2a3140);
+    border-radius: 3px;
+    padding: 4px 8px;
+    font-size: 13px;
+    color: var(--text-primary, #e2e6f4);
+    width: 70px;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: rgb(var(--accent-rgb, 240 160 48) / 0.6);
+    box-shadow: 0 0 0 2px rgb(var(--accent-rgb, 240 160 48) / 0.2);
+}
+
+/* ---------- Tag (matches FigUI .tag) ---------- */
+
+.tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border: 1px solid var(--border, #2a3140);
+    background: var(--elevated, #1b2030);
+    color: var(--text-muted, #a0a8bc);
+}
+
+.tag[data-state="Idle"],
+.tag[data-state="Jog"] {
+    color: var(--ok, #22c55e);
+    border-color: rgb(var(--ok-rgb, 34 197 94) / 0.35);
+    background: rgb(var(--ok-rgb, 34 197 94) / 0.08);
+}
+
+.tag[data-state="Run"] {
+    color: var(--accent, #f0a030);
+    border-color: rgb(var(--accent-rgb, 240 160 48) / 0.35);
+    background: rgb(var(--accent-rgb, 240 160 48) / 0.08);
+}
+
+.tag[data-state="Hold"],
+.tag[data-state="Door"] {
+    color: var(--warn, #facc15);
+    border-color: rgb(var(--warn-rgb, 250 204 21) / 0.35);
+    background: rgb(var(--warn-rgb, 250 204 21) / 0.08);
+}
+
+.tag[data-state="Alarm"] {
+    color: var(--danger, #ef4444);
+    border-color: rgb(var(--danger-rgb, 239 68 68) / 0.35);
+    background: rgb(var(--danger-rgb, 239 68 68) / 0.08);
+}
+
+/* ---------- Joystick canvas ---------- */
+
+#joyJogDiv {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    max-height: 360px;
+    margin: 0 auto;
+    touch-action: none;
+}
+
+#joyJogDiv canvas {
+    margin: 0 auto;
+    display: block;
+    touch-action: none;
+}
